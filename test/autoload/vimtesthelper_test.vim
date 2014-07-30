@@ -4,6 +4,11 @@ let s:cpo_bak = &cpoptions
 lockvar s:cpo_bak
 set cpoptions&vim
 
+let s:sfile = expand('<sfile>:p')
+lockvar s:sfile
+let s:headOfPath = matchstr(s:sfile, '\m^.\{-}/')
+lockvar s:headOfPath
+
 let s:t = vimtest#new('vimtesthelper#isTestFilePath()') " {{{
 	function! s:t.startup()
 		let self._F = function('vimtesthelper#isTestFilePath')
@@ -22,6 +27,32 @@ let s:t = vimtest#new('vimtesthelper#isTestFilePath()') " {{{
 		call self.assert.equals(0, self._F('foo_test.vim'))
 	endfunction
 " }}}
+
+let s:t = vimtest#new('vimtesthelper#getTestFilePathCandidates()') " {{{
+	function! s:t.startup()
+		let self._F = function('vimtesthelper#getTestFilePathCandidates')
+		lockvar self._F
+	endfunction
+
+	function! s:t.should_return_test_file_path_candidates()
+		let patterns = {
+		\	s:headOfPath . 'foo.vim': [
+		\		s:headOfPath . 'test/foo_test.vim'
+		\	],
+		\	s:headOfPath . 'foo/bar.vim': [
+		\		s:headOfPath . 'test/foo/bar_test.vim',
+		\		s:headOfPath . 'foo/test/bar_test.vim'
+		\	]
+		\ }
+
+		for k in keys(patterns)
+			call self.assert.equals(sort(patterns[k]), sort(self._F(k)))
+		endfor
+	endfunction
+" }}}
+
+unlockvar s:sfile
+unlockvar s:headOfPath
 
 let &cpoptions = s:cpo_bak
 unlockvar s:cpo_bak
