@@ -45,5 +45,32 @@ function! vimtesthelper#getTestFilePathCandidates(productFilePath)
 	return candidates
 endfunction
 
+function! vimtesthelper#getProductFilePathCandidates(testFilePath)
+	if !vimtesthelper#isTestFilePath(a:testFilePath)
+		throw '"' . a:testFilePath . '" isn''t the test file path.'
+	endif
+
+	let testFilePath = fnamemodify(a:testFilePath, ':p')
+	let testFilePath = s:vfp.unify_separator(testFilePath)
+
+	let testDirName = 'test/'
+	let testDirNameRegexp = '\V/\zs' . testDirName
+	let testDirNameLen = strlen(testDirName)
+	unlet testDirName
+
+	let path = substitute(testFilePath, '\M\zs_test\ze.vim$', '', '')
+	let candidates = []
+	let i = match(path, testDirNameRegexp, 0)
+	while i != -1
+		let candidatePath
+		\	= strpart(path, 0, i) . strpart(path, i + testDirNameLen)
+		call add(candidates, candidatePath)
+
+		let i = match(path, testDirNameRegexp, i + testDirNameLen)
+	endwhile
+
+	return candidates
+endfunction
+
 let &cpoptions = s:cpo_bak
 unlockvar s:cpo_bak

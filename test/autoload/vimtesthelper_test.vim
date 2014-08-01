@@ -51,6 +51,44 @@ let s:t = vimtest#new('vimtesthelper#getTestFilePathCandidates()') " {{{
 	endfunction
 " }}}
 
+let s:t = vimtest#new('vimtesthelper#getProductFilePathCandidates()') " {{{
+	function! s:t.startup()
+		let self._F = function('vimtesthelper#getProductFilePathCandidates')
+		lockvar self._F
+	endfunction
+
+	function! s:t.should_return_product_file_path_candidates()
+		let patterns = {
+		\	'/test/foo_test.vim': [
+		\		'/foo.vim'
+		\	],
+		\	'/foo/test/bar_test.vim': [
+		\		'/foo/bar.vim'
+		\	],
+		\	'/test/foo/bar_test.vim': [
+		\		'/foo/bar.vim'
+		\	],
+		\	'/test/foo/test/bar_test.vim': [
+		\		'/foo/test/bar.vim',
+		\		'/test/foo/bar.vim',
+		\	],
+		\ }
+
+		for k in keys(patterns)
+			call self.assert.equals(sort(patterns[k]), sort(self._F(k)))
+		endfor
+	endfunction
+
+	function! s:t.should_throw_error_when_the_argument_not_matched_the_test_file_path_format()
+		" Don't decide the error string.
+		call self.assert.throw_pattern('\m.')
+
+		call self._F('')
+		call self._F('/test/foo.vim')
+		call self._F('/foo/bar_test.vim')
+	endfunction
+" }}}
+
 unlockvar s:sfile
 unlockvar s:headOfPath
 
